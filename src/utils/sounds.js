@@ -11,7 +11,11 @@ function getCtx() {
   return ctx;
 }
 
-function tone({ freq = 440, duration = 0.15, type = 'sine', volume = 0.08, attack = 0.005, release = 0.08, slideTo = null }) {
+/* ============================================================
+   One-shot UI effect sounds (hover, click, etc.)
+   Short and quiet — fine for any speaker.
+   ============================================================ */
+function tone({ freq = 440, duration = 0.15, type = 'sine', volume = 0.06, attack = 0.005, release = 0.08, slideTo = null }) {
   const ac = getCtx();
   if (!ac) return;
   const osc = ac.createOscillator();
@@ -31,12 +35,12 @@ function tone({ freq = 440, duration = 0.15, type = 'sine', volume = 0.08, attac
 }
 
 export const sounds = {
-  hover: () => tone({ freq: 720, duration: 0.04, type: 'sine', volume: 0.025, attack: 0.002, release: 0.04 }),
+  hover: () => tone({ freq: 720, duration: 0.04, type: 'sine', volume: 0.02, attack: 0.002, release: 0.04 }),
   click: () => {
-    tone({ freq: 480, duration: 0.05, type: 'triangle', volume: 0.06 });
-    tone({ freq: 960, duration: 0.06, type: 'sine', volume: 0.03, attack: 0.001 });
+    tone({ freq: 480, duration: 0.05, type: 'triangle', volume: 0.05 });
+    tone({ freq: 960, duration: 0.06, type: 'sine', volume: 0.025, attack: 0.001 });
   },
-  type: () => tone({ freq: 1100 + Math.random() * 200, duration: 0.02, type: 'square', volume: 0.015 }),
+  type: () => tone({ freq: 1100 + Math.random() * 200, duration: 0.02, type: 'square', volume: 0.012 }),
   success: () => {
     const base = 523;
     [0, 0.08, 0.16].forEach((d, i) => {
@@ -44,14 +48,14 @@ export const sounds = {
         freq: base * Math.pow(1.25, i),
         duration: 0.18,
         type: 'sine',
-        volume: 0.05,
+        volume: 0.04,
       }), d * 1000);
     });
   },
-  whoosh: () => tone({ freq: 800, slideTo: 200, duration: 0.4, type: 'sine', volume: 0.05, attack: 0.02, release: 0.2 }),
+  whoosh: () => tone({ freq: 800, slideTo: 200, duration: 0.4, type: 'sine', volume: 0.04, attack: 0.02, release: 0.2 }),
   power: () => {
-    tone({ freq: 110, slideTo: 440, duration: 0.4, type: 'sawtooth', volume: 0.04, release: 0.3 });
-    setTimeout(() => tone({ freq: 880, duration: 0.2, type: 'sine', volume: 0.04 }), 200);
+    tone({ freq: 110, slideTo: 440, duration: 0.4, type: 'sawtooth', volume: 0.03, release: 0.3 });
+    setTimeout(() => tone({ freq: 880, duration: 0.2, type: 'sine', volume: 0.03 }), 200);
   },
   glitch: () => {
     [0, 0.04, 0.09].forEach((d) => {
@@ -59,18 +63,19 @@ export const sounds = {
         freq: 200 + Math.random() * 1200,
         duration: 0.03,
         type: 'square',
-        volume: 0.03,
+        volume: 0.025,
       }), d * 1000);
     });
   },
 };
 
 /* ============================================================
-   Background Music — procedural sequencer
-   - Key: A minor
-   - Progression: Am → F → C → G (each = 1 bar, loops every 4 bars)
-   - Tempo: 72 BPM, 16 steps/bar
-   - Layers: pad chord, sub-bass, arpeggio, kick, hat, drone
+   Background Music — full ambient/cinematic arrangement
+   - Key: A minor.  Progression: Am → F → C → G (loops every 4 bars).
+   - Tempo: 72 BPM, 16 steps/bar.
+   - Layers: low drone, sustained pad chord, sub-bass pluck per beat,
+     arpeggio on every 16th, gentle kick on beats 1 & 3, soft hi-hat
+     on the offbeats. Master volume tuned to be present but not harsh.
    ============================================================ */
 let music = null;
 
@@ -84,13 +89,13 @@ const N = {
   G1: 49, G2: 98, G3: 196, G4: 392,
 };
 
-export function startMusic({ volume = 0.95 } = {}) {
+export function startMusic({ volume = 0.55 } = {}) {
   const ac = getCtx();
   if (!ac || music) return;
 
   const startNow = ac.currentTime;
 
-  // Master chain — gain → compressor → destination (compressor catches loud peaks)
+  // Master chain: gain → compressor → analyser → destination
   const master = ac.createGain();
   master.gain.setValueAtTime(0, startNow);
   master.gain.linearRampToValueAtTime(volume, startNow + 2.5);
@@ -102,7 +107,6 @@ export function startMusic({ volume = 0.95 } = {}) {
   compressor.attack.value = 0.005;
   compressor.release.value = 0.18;
 
-  // Analyser tap for visualizer
   const analyser = ac.createAnalyser();
   analyser.fftSize = 128;
   analyser.smoothingTimeConstant = 0.78;
@@ -111,7 +115,7 @@ export function startMusic({ volume = 0.95 } = {}) {
   compressor.connect(analyser);
   compressor.connect(ac.destination);
 
-  // Lowpass filter for warmth (with slow LFO)
+  // Lowpass filter for warmth, with a slow LFO that "breathes" the cutoff
   const filter = ac.createBiquadFilter();
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
@@ -130,7 +134,7 @@ export function startMusic({ volume = 0.95 } = {}) {
   const droneGain = ac.createGain();
   droneOsc.type = 'sine';
   droneOsc.frequency.value = N.A1;
-  droneGain.gain.value = 0.18;
+  droneGain.gain.value = 0.16;
   droneOsc.connect(droneGain).connect(filter);
   droneOsc.start();
 
@@ -139,24 +143,20 @@ export function startMusic({ volume = 0.95 } = {}) {
   droneOsc2.type = 'triangle';
   droneOsc2.frequency.value = N.A2;
   droneOsc2.detune.value = -6;
-  droneGain2.gain.value = 0.06;
+  droneGain2.gain.value = 0.05;
   droneOsc2.connect(droneGain2).connect(filter);
   droneOsc2.start();
 
   // Tempo
   const bpm = 72;
   const beatDur = 60 / bpm;
-  const stepDur = beatDur / 4; // 16th note
+  const stepDur = beatDur / 4;
 
   // Arpeggio per bar (16 steps)
   const arps = [
-    // Am: A C E A C E A C ...
     [N.A3, N.C4, N.E4, N.A4, N.C5, N.E4, N.A4, N.C4, N.A3, N.C4, N.E4, N.A4, N.C5, N.E4, N.A4, N.C4],
-    // F:  F A C F A C F A ...
     [N.F3, N.A3, N.C4, N.F4, N.A3, N.C4, N.F4, N.A3, N.F3, N.A3, N.C4, N.F4, N.A3, N.C4, N.F4, N.A3],
-    // C:  C E G C E G C E ...
     [N.C3, N.E3, N.G3, N.C4, N.E4, N.G3, N.C4, N.E3, N.C3, N.E3, N.G3, N.C4, N.E4, N.G3, N.C4, N.E3],
-    // G:  G B D G B D G B ...
     [N.G3, N.B3, N.D4, N.G4, N.B4, N.D4, N.G4, N.B3, N.G3, N.B3, N.D4, N.G4, N.B4, N.D4, N.G4, N.B3],
   ];
 
@@ -169,11 +169,10 @@ export function startMusic({ volume = 0.95 } = {}) {
     [N.G3, N.B3, N.D4], // G
   ];
 
-  // Drum patterns (16 steps, 1 = trigger)
+  // 16-step drum patterns
   const kickPattern = [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]; // beats 1 & 3
   const hatPattern  = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]; // offbeats
 
-  // Voice synths
   const playPluck = (freq, time, dur, vol) => {
     const osc = ac.createOscillator();
     const g = ac.createGain();
@@ -201,7 +200,7 @@ export function startMusic({ volume = 0.95 } = {}) {
     f.frequency.exponentialRampToValueAtTime(160, time + dur);
     f.Q.value = 4;
     g.gain.setValueAtTime(0, time);
-    g.gain.linearRampToValueAtTime(0.42, time + 0.01);
+    g.gain.linearRampToValueAtTime(0.22, time + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
     osc.connect(f);
     sub.connect(f);
@@ -220,8 +219,8 @@ export function startMusic({ volume = 0.95 } = {}) {
       osc.frequency.value = freq;
       osc.detune.value = (i - 1) * 5;
       g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.045, time + 0.6);
-      g.gain.linearRampToValueAtTime(0.045, time + dur - 0.6);
+      g.gain.linearRampToValueAtTime(0.04, time + 0.6);
+      g.gain.linearRampToValueAtTime(0.04, time + dur - 0.6);
       g.gain.linearRampToValueAtTime(0.0001, time + dur);
       osc.connect(g).connect(filter);
       osc.start(time);
@@ -236,11 +235,11 @@ export function startMusic({ volume = 0.95 } = {}) {
     osc.frequency.setValueAtTime(140, time);
     osc.frequency.exponentialRampToValueAtTime(40, time + 0.12);
     g.gain.setValueAtTime(0, time);
-    g.gain.linearRampToValueAtTime(1.0, time + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.32);
+    g.gain.linearRampToValueAtTime(0.55, time + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.28);
     osc.connect(g).connect(master);
     osc.start(time);
-    osc.stop(time + 0.3);
+    osc.stop(time + 0.32);
   };
 
   const playHat = (time) => {
@@ -254,13 +253,13 @@ export function startMusic({ volume = 0.95 } = {}) {
     f.frequency.value = 7000;
     const g = ac.createGain();
     g.gain.setValueAtTime(0, time);
-    g.gain.linearRampToValueAtTime(0.14, time + 0.001);
+    g.gain.linearRampToValueAtTime(0.06, time + 0.001);
     g.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
     src.connect(f).connect(g).connect(master);
     src.start(time);
   };
 
-  // Lookahead scheduler — schedules notes ~200ms ahead, runs every 25ms
+  // Lookahead scheduler — schedules notes ~250ms ahead, runs every 25ms
   let nextStepTime = ac.currentTime + 0.15;
   let step = 0;
   let bar = 0;
@@ -271,23 +270,12 @@ export function startMusic({ volume = 0.95 } = {}) {
       const arp = arps[bar];
       const note = arp[step];
 
-      // Arpeggio — every step, accent on beats
       if (note) {
         const accent = step % 4 === 0;
-        playPluck(note, nextStepTime, accent ? 0.45 : 0.32, accent ? 0.20 : 0.12);
+        playPluck(note, nextStepTime, accent ? 0.45 : 0.32, accent ? 0.10 : 0.06);
       }
-
-      // Bass — once per beat
-      if (step % 4 === 0) {
-        playBass(bassRoots[bar], nextStepTime, beatDur * 0.85);
-      }
-
-      // Pad — sustained for full bar
-      if (step === 0) {
-        playPad(padChords[bar], nextStepTime, beatDur * 4);
-      }
-
-      // Drums
+      if (step % 4 === 0) playBass(bassRoots[bar], nextStepTime, beatDur * 0.85);
+      if (step === 0) playPad(padChords[bar], nextStepTime, beatDur * 4);
       if (kickPattern[step]) playKick(nextStepTime);
       if (hatPattern[step]) playHat(nextStepTime);
 
@@ -312,19 +300,15 @@ export function startMusic({ volume = 0.95 } = {}) {
   };
 }
 
-export function getAnalyser() {
-  return music ? music.analyser : null;
-}
-
 export function stopMusic() {
   const ac = getCtx();
   if (!ac || !music) return;
   const m = music;
-  music = null; // immediately mark stopped so scheduler won't queue more
+  music = null; // mark stopped immediately so scheduler bails out
 
   clearInterval(m.intervalId);
   const now = ac.currentTime;
-  const fadeTime = 1.2;
+  const fadeTime = 1.5;
 
   m.master.gain.cancelScheduledValues(now);
   m.master.gain.setValueAtTime(m.master.gain.value, now);
@@ -332,13 +316,17 @@ export function stopMusic() {
 
   const stopAt = now + fadeTime + 0.1;
   m.drones.forEach((node) => { try { node.stop(stopAt); } catch (e) { /* already stopped */ } });
-  setTimeout(() => { try { m.master.disconnect(); } catch (e) {} }, (fadeTime + 0.5) * 1000);
+  setTimeout(() => { try { m.master.disconnect(); } catch (e) {} }, (fadeTime + 0.6) * 1000);
+}
+
+export function getAnalyser() {
+  return music ? music.analyser : null;
 }
 
 export function isMusicPlaying() {
   return !!music;
 }
 
-// Backwards-compatible aliases (old names used by SoundContext earlier)
+// Backwards-compatible aliases (older code paths)
 export const startAmbient = startMusic;
 export const stopAmbient = stopMusic;

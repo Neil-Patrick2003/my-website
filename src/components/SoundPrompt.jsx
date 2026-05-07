@@ -1,5 +1,4 @@
 import { useSound } from '../context/SoundContext';
-import { isFsSupported, requestFs } from '../utils/fullscreen';
 
 export default function SoundPrompt({ onDecide }) {
   const { enableSound, disableSound } = useSound();
@@ -7,11 +6,6 @@ export default function SoundPrompt({ onDecide }) {
   const choose = (withSound) => {
     if (withSound) enableSound();
     else disableSound();
-    // The button click is a valid user gesture — the only moment the
-    // browser will accept a fullscreen request. Fail silently if denied.
-    if (isFsSupported()) {
-      requestFs().catch(() => {});
-    }
     setTimeout(onDecide, 350);
   };
 
@@ -38,7 +32,7 @@ export default function SoundPrompt({ onDecide }) {
 
           <h2 className="text-2xl font-light tracking-wide text-glow mb-2">Welcome</h2>
           <p className="text-fog text-sm mb-8 leading-relaxed">
-            This experience is designed with sound and best viewed fullscreen.<br />
+            This experience is designed with sound.<br />
             Would you like to enable audio?
           </p>
 
@@ -57,7 +51,7 @@ export default function SoundPrompt({ onDecide }) {
             </button>
           </div>
 
-          <p className="text-fog/50 text-xs mt-6">You can toggle sound or exit fullscreen anytime</p>
+          <p className="text-fog/50 text-xs mt-6">You can toggle sound anytime</p>
         </div>
       </div>
     </div>

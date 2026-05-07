@@ -4,13 +4,12 @@ import Marquee from './Marquee';
 import SectionNumber from './SectionNumber';
 import { useSound } from '../context/SoundContext';
 
-// TODO: fill in real LinkedIn / Twitter handles when you have them.
 const EMAIL = 'neilpatrickbautistamulingbayan@gmail.com';
 const SOCIALS = [
-  { label: 'GitHub',      href: 'https://github.com/Neil-Patrick2003',     handle: '@Neil-Patrick2003' },
-  { label: 'LinkedIn',    href: 'https://linkedin.com/in/REPLACE_ME',      handle: '/in/REPLACE_ME' },
-  { label: 'Twitter / X', href: 'https://x.com/REPLACE_ME',                handle: '@REPLACE_ME' },
-  { label: 'Email',       href: `mailto:${EMAIL}`,                         handle: EMAIL },
+  { label: 'GitHub',      href: 'https://github.com/Neil-Patrick2003', handle: '@Neil-Patrick2003' },
+  { label: 'LinkedIn',    href: null,                                  handle: 'Coming soon' },
+  { label: 'Twitter / X', href: null,                                  handle: 'Coming soon' },
+  { label: 'Email',       href: `mailto:${EMAIL}`,                     handle: EMAIL },
 ];
 
 export default function Contact() {
@@ -62,22 +61,39 @@ export default function Contact() {
               </a>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mt-14">
-                {SOCIALS.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    onMouseEnter={() => play('hover')}
-                    onClick={() => play('click')}
-                    className="card-elevated rounded-xl px-4 py-4 text-left group"
-                  >
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-fog/60 mb-1">{s.label}</div>
-                    <div className="text-mist text-sm group-hover:text-glow transition-colors truncate font-mono">
-                      {s.handle}
-                    </div>
-                  </a>
-                ))}
+                {SOCIALS.map((s) => {
+                  const isLink = !!s.href;
+                  const isExternal = isLink && /^https?:\/\//.test(s.href);
+                  const Tag = isLink ? 'a' : 'div';
+                  const linkProps = isLink
+                    ? {
+                        href: s.href,
+                        target: isExternal ? '_blank' : undefined,
+                        rel: isExternal ? 'noreferrer noopener' : undefined,
+                        onMouseEnter: () => play('hover'),
+                        onClick: () => play('click'),
+                      }
+                    : { 'aria-label': `${s.label} — coming soon` };
+                  return (
+                    <Tag
+                      key={s.label}
+                      {...linkProps}
+                      className={`card-elevated rounded-xl px-4 py-4 text-left group ${isLink ? '' : 'opacity-70 cursor-default'}`}
+                    >
+                      <div className="text-[10px] tracking-[0.3em] uppercase text-fog/60 mb-1 flex items-center gap-2">
+                        <span>{s.label}</span>
+                        {!isLink && (
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-mist/40 animate-pulse" />
+                        )}
+                      </div>
+                      <div className={`text-sm transition-colors truncate font-mono ${
+                        isLink ? 'text-mist group-hover:text-glow' : 'text-fog italic'
+                      }`}>
+                        {s.handle}
+                      </div>
+                    </Tag>
+                  );
+                })}
               </div>
             </div>
           </div>

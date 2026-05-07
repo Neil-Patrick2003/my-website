@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useSound } from '../context/SoundContext';
 import { useActiveSection } from '../utils/useActiveSection';
 import SoundToggle from './SoundToggle';
-import FullscreenToggle from './FullscreenToggle';
 import NowPlaying from './NowPlaying';
 
 const links = [
@@ -80,7 +79,6 @@ export default function Navbar() {
           <div className="flex items-center gap-2 md:gap-3">
             <NowPlaying />
             <SoundToggle />
-            <FullscreenToggle />
           </div>
         </div>
       </div>

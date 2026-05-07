@@ -20,6 +20,7 @@ export default function SoundToggle({ className = '' }) {
         ) : (
           <line x1="16" y1="8" x2="22" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         )}
+        
         {!enabled && <line x1="22" y1="8" x2="16" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />}
       </svg>
       {enabled && (
