@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Stray template/experiment folders (had a nested .git that blocked staging)
+/My Portfolio
+.expo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
