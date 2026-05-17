@@ -33,7 +33,7 @@ const STACK = [
   {
     group: 'Tools',
     icon: '◈',
-    items: ['Docker', 'Git', 'Postman', 'VS Code', 'PHPStorm', 'GitHub'],
+    items: ['Docker', 'Git', 'Postman', 'VS Code', 'PHPStorm', 'GitHub', 'n8n'],
     note: 'The everyday workshop — sharpened over years of daily use.',
   },
   {
